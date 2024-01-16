@@ -39,7 +39,14 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate){
     }
     console.log("finished getting newly updated products");
 
-    Products = [...Products].map((product) => JSON.parse(product));
+    Products = [...Products].map((product) => {
+        try {
+            return JSON.parse(product)
+        } catch (e) {
+            console.log(e);
+            return null;
+        }
+    });
 
     console.log("finished parsing products")
 

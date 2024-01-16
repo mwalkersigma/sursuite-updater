@@ -34,7 +34,6 @@ async function skuVaultUpdate (options) {
     let inventory = {};
     do{
         body = JSON.stringify({...JSON.parse(body),...{PageNumber:pageNumber}});
-        console.log("Starting Request" , pageNumber)
         const response = await fetch(url,{method,headers,body})
         console.log("Sku Vault" , response.status , response.statusText , pageNumber);
         if(response.ok) {
@@ -51,13 +50,13 @@ async function skuVaultUpdate (options) {
 
     Object.entries(inventory).forEach(([sku, {quantity,cost}]) => {
         console.log(sku,quantity,cost)
-        // componentDB.query(`
-        //     UPDATE sursuite.components
-        //     SET
-        //         quantity = $2,
-        //         cost = $3
-        //     WHERE sku = $1
-        // `,[sku,quantity,cost])
+        componentDB.query(`
+            UPDATE sursuite.components
+            SET
+                quantity = $2,
+                cost = $3
+            WHERE sku = $1
+        `,[sku,quantity,cost])
     })
 
 
@@ -67,5 +66,5 @@ async function skuVaultUpdate (options) {
 
 
 module.exports = async function (startDate) {
-    await skuVaultUpdate({ModifiedAfterDateTimeUtc: new Date('2024-01-02').toISOString()});
+    await skuVaultUpdate();
 }
