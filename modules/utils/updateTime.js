@@ -13,18 +13,18 @@ async function createIfNotExists(path){
 
 
 exports.getLastUpdatedTime = async function getLastUpdatedTime(tokenName){
-    await createIfNotExists("../../json/timeLastUpdated.json");
+    await createIfNotExists("./json/timeLastUpdated.json");
     const {timeLastUpdated} = await fs
-        .readFile("../../json/timeLastUpdated.json", "utf-8")
+        .readFile("./json/timeLastUpdated.json", "utf-8")
         .then((data) => JSON.parse(data));
 
     return timeLastUpdated[tokenName];
 }
 
 exports.updateLastUpdatedTime = async function updateLastUpdatedTime(tokenName,value=new Date().toISOString()){
-    await createIfNotExists("../../json/timeLastUpdated.json");
-    let currentTimestampObject = await fs.readFile("../../json/timeLastUpdated.json", "utf-8")
+    await createIfNotExists("./json/timeLastUpdated.json");
+    let currentTimestampObject = await fs.readFile("./json/timeLastUpdated.json", "utf-8")
         .then((data) => JSON.parse(data));
     currentTimestampObject.timeLastUpdated[tokenName] = value;
-    await fs.writeFile("../../json/timeLastUpdated.json", JSON.stringify(currentTimestampObject, null, 2))
+    await fs.writeFile("./json/timeLastUpdated.json", JSON.stringify(currentTimestampObject, null, 2))
 }
