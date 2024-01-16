@@ -1,0 +1,20 @@
+{
+  "name": "sursuiteupdater",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supercharge/promise-pool": "^3.1.0",
+    "csv-parse": "^5.5.3",
+    "decompress": "^4.2.1",
+    "dotenv": "^16.3.1",
+    "nodejs-file-downloader": "^4.12.1",
+    "pg": "^8.11.3"
+  }
+}

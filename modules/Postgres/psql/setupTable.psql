@@ -1,0 +1,64 @@
+--DROP TABLE IF EXISTS sursuite.components CASCADE;
+-- CREATE TABLE IF NOT EXISTS sursuite.components
+-- (
+--     sku varchar(50) primary key,
+--     title text,
+--     manufacturer varchar(50),
+--     description text,
+--     price decimal(10,2),
+--     retail_price decimal(10,2),
+--     radwell_price decimal(10,2),
+--     condition text,
+--     category text,
+--     weight decimal(10,2),
+--     model text,
+--     create_date_utc timestamp,
+--     update_date_utc timestamp,
+--     date_priced_utc timestamp,
+--     image_last_updated_utc timestamp,
+--     final_approval_date_utc timestamp,
+--     template_approval_status text,
+--     series text,
+--     priced_by text,
+--     final_approval_by text,
+--     image_last_updated_by text,
+--     quantity int
+--     cost decimal(10,2),
+-- );
+
+-- DROP TABLE IF EXISTS sursuite.orders CASCADE;
+-- DROP SEQUENCE IF EXISTS sursuite.orders_order_id_seq CASCADE;
+-- CREATE SEQUENCE IF NOT EXISTS sursuite.orders_order_id_seq
+--     INCREMENT 1
+--     START 1
+--     MINVALUE 1
+--     MAXVALUE 9223372036854775807
+--     CACHE 1;
+-- CREATE TABLE IF NOT EXISTS sursuite.orders
+-- (
+--     order_id text primary key default ( nextval('sursuite.orders_order_id_seq'::regclass) ),
+--     payment_date_utc timestamp,
+--     order_status text,
+--     name text,
+--     store_id text
+-- );
+--
+--
+-- DROP TABLE IF EXISTS sursuite.sales CASCADE;
+-- CREATE TABLE IF NOT EXISTS sursuite.sales
+-- (
+--     sale_id BIGSERIAL primary key,
+--     order_id text,
+--     sku varchar(50),
+--     name text,
+--     quantity_sold int,
+--     sold_price decimal(10,2),
+--     FOREIGN KEY (order_id) REFERENCES sursuite.orders(order_id),
+--     FOREIGN KEY (sku) REFERENCES sursuite.components(sku)
+-- );
+
+UPDATE sursuite.components
+SET
+    quantity = null
+WHERE
+    quantity != null;
