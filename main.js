@@ -16,7 +16,7 @@ require('dotenv').config();
 const channelAdvisor = require('./modules/channelAdvisor/update.ca');
 const shipstation = require('./modules/shipstation/update.ss');
 
-const {getLastUpdatedTime, updateLastUpdatedTime} = require("./modules/utils/updateTime");
+const { getLastUpdatedTime, updateLastUpdatedTime } = require("./modules/utils/updateTime");
 
 
 

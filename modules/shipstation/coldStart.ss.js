@@ -2,7 +2,6 @@ const {parse} = require("csv-parse");
 const fs = require("fs");
 
 const {PromisePool} = require("@supercharge/promise-pool")
-const {performance} = require('perf_hooks');
 // perf hooks
 const shipStationToken = process.env.SHIPSTATION_TOKEN;
 
@@ -127,6 +126,7 @@ module.exports = async function main () {
     let newOrders = await getShipStationOrders({
         pageSize: 500,
         paymentDateStart: "06-01-2023",
+        storeId: 225895,
     })
 
     bigCommerceOrders
