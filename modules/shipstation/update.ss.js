@@ -10,7 +10,7 @@ const db = require("../Postgres/js/index.js");
 const {buildURL} = require("./buildUrl");
 
 
-async function getShipStationOrders(options) {
+async function getShipStationOrders(options, log) {
     const baseUrl = "https://ssapi.shipstation.com";
     const endpoint = "/orders";
     let results = [];
@@ -35,13 +35,13 @@ async function getShipStationOrders(options) {
             break;
         }
         options.page = page + 1;
-        console.log(`Page ${page} of ${pages} retrieved`)
-        console.log(`Total orders retrieved: ${results.length}`)
+        log(`Page ${page} of ${pages} retrieved`)
+        log(`Total orders retrieved: ${results.length}`)
     }
     return results;
 }
 
-module.exports = async function main (startDate) {
+module.exports = async function main (startDate,log) {
     let orders = {
         orders: new Map(),
         items: [],
@@ -49,22 +49,22 @@ module.exports = async function main (startDate) {
     // convert startDate to ISO 8601 string
     startDate = new Date(startDate).toISOString();
 
-    console.log("Getting orders new Orders from ShipStation");
+    log("Getting orders new Orders from ShipStation");
     let newOrders = await getShipStationOrders({
         pageSize: 500,
         paymentDateStart: startDate,
-    });
-    console.log(`${newOrders.length} new orders retrieved`);
+    },log);
+    log(`${newOrders.length} new orders retrieved`);
 
 
-    console.log("Getting updated orders from ShipStation");
+    log("Getting updated orders from ShipStation");
     let updatedOrders = await getShipStationOrders({
         pageSize: 500,
         modifyDateStart: startDate,
     })
-    console.log(`${updatedOrders.length} updated orders retrieved`);
+    log(`${updatedOrders.length} updated orders retrieved`);
 
-    console.log("Preparing the orders to be inserted in the database")
+    log("Preparing the orders to be inserted in the database")
     updatedOrders
         .concat(newOrders)
         .forEach(order => {
@@ -92,8 +92,8 @@ module.exports = async function main (startDate) {
                 })
             }
         });
-    console.log(`${orders.orders.size} orders to be inserted into the Orders database`);
-    console.log(`${orders.items.length} items to be inserted into the Sales database`);
+    log(`${orders.orders.size} orders to be inserted into the Orders database`);
+    log(`${orders.items.length} items to be inserted into the Sales database`);
 
     for(let order of orders.orders.values()) {
         let {paymentDate, orderId, orderStatus, name, storeId} = order;
@@ -103,8 +103,8 @@ module.exports = async function main (startDate) {
         let query = "";
         let params = [orderId, paymentDate, orderStatus, name, storeId]
         if(existingOrder.rows.length === 0) {
-            console.log("New Order");
-            console.log("Inserting into the database")
+            log("New Order");
+            log("Inserting into the database")
             query =`
                 INSERT INTO
                     sursuite.orders (order_id, payment_date_utc, order_status, name, store_id)
@@ -112,8 +112,8 @@ module.exports = async function main (startDate) {
                     ($1, $2, $3, $4, $5);
             `
         }else{
-            console.log("Existing Order");
-            console.log("Updating the database")
+            log("Existing Order");
+            log("Updating the database")
             query=`
                 UPDATE
                     sursuite.orders
@@ -141,8 +141,8 @@ module.exports = async function main (startDate) {
         let query = "";
         let params = [orderId, sku, name, quantitySold, soldPrice]
         if(existingSale.rows.length === 0) {
-            console.log("New Sale");
-            console.log("Inserting into the database")
+            log("New Sale");
+            log("Inserting into the database")
             query =`
                 INSERT INTO
                     sursuite.sales(order_id, sku, name, quantity_sold, sold_price)
@@ -150,8 +150,8 @@ module.exports = async function main (startDate) {
                     ($1, $2, $3, $4, $5);
             `
         }else{
-            console.log("Existing Sale");
-            console.log("Updating the database")
+            log("Existing Sale");
+            log("Updating the database")
             query=`
                 UPDATE
                     sursuite.sales
@@ -167,27 +167,27 @@ module.exports = async function main (startDate) {
         try {
             await db.query(query, params);
         } catch (e) {
-            console.log('Error updating the database');
+            log('Error updating the database');
             let fKeyVoilation = e.message.includes('violates foreign key constraint');
             if(!fKeyVoilation) {
-                console.log(query,params)
+                log(query,params)
                 throw e;
             }
-            console.log('Foreign Key Violation');
-            console.log("Adding the component to the database");
+            log('Foreign Key Violation');
+            log("Adding the component to the database");
             await db.query(`
                 INSERT INTO 
                      sursuite.components (sku,title)
                 VALUES
                      ($1, $2);
             `, [sku, name]);
-            console.log("Component added to the database");
-            console.log("attempting to update the database again");
+            log("Component added to the database");
+            log("attempting to update the database again");
             await db.query(query, params);
         }
     }
 
-    console.log("Done updating the database with new orders from ShipStation");
+    log("Done updating the database with new orders from ShipStation");
 
 }
 

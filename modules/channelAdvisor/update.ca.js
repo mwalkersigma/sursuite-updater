@@ -2,14 +2,17 @@ const fetchWithBearerToken = require('../utils/fetchWithBearerToken.js');
 const authorizeChannelAdvisor = require('./authorizeChannelAdvisor.js');
 const {updateDB,insertDB} = require('./db.ca.js');
 const componentDB = require('../Postgres/js/index.js');
-module.exports = async function updateFromChannelAdvisor(lastUpdateDate){
+
+
+module.exports = async function updateFromChannelAdvisor(lastUpdateDate,log){
+
 
     const { APPLICATION_ID, SHARED_SECRET, REFRESH_TOKEN } = process.env;
     
 
-    console.log('Authorizing Channel Advisor...');
+    log('Authorizing Channel Advisor...');
     const access_token = await authorizeChannelAdvisor(APPLICATION_ID, SHARED_SECRET, REFRESH_TOKEN);
-    console.log('Channel Advisor Authorized!');
+    log('Channel Advisor Authorized!');
 
     let Products = new Set();
 
@@ -17,7 +20,7 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate){
     let newlyCreatedProducts = await newlyCreatedProductsResponse.json();
 
     while (newlyCreatedProducts['@odata.nextLink']) {
-        console.log(newlyCreatedProducts['@odata.nextLink']);
+
         newlyCreatedProducts.value.forEach((product) => {
             Products.add(JSON.stringify(product))
         })
@@ -25,7 +28,7 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate){
         newlyCreatedProductsResponse = await fetchWithBearerToken(newlyCreatedProducts['@odata.nextLink'], access_token);
         newlyCreatedProducts = await newlyCreatedProductsResponse.json();
     }
-
+    log("finished getting newly created products");
     let newlyUpdatedProductsResponse = await fetchWithBearerToken(`https://api.channeladvisor.com/v1/Products?$filter=UpdateDateUtc ge ${lastUpdateDate}`, access_token);
     let newlyUpdatedProducts = await newlyUpdatedProductsResponse.json();
 
@@ -37,7 +40,7 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate){
         newlyUpdatedProductsResponse = await fetchWithBearerToken(newlyUpdatedProducts['@odata.nextLink'], access_token)
         newlyUpdatedProducts = await newlyUpdatedProductsResponse.json()
     }
-    console.log("finished getting newly updated products");
+    log("finished getting newly updated products");
 
     Products = [...Products].map((product) => {
         try {
@@ -48,7 +51,7 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate){
         }
     });
 
-    console.log("finished parsing products")
+    log("finished parsing products")
 
     for (let product of Products) {
         try {
@@ -79,7 +82,7 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate){
                 product?.['CreateDateUtc'],
                 product?.['UpdateDateUtc'],
                 product?.['(13.) Date Priced'],
-                product?.['ImageLastUpdateUtc'],
+                product?.['(21.) Image Last Updated Date'],
                 product?.['(04.) Date of Final Approval'],
                 product?.['(06.) Template Approval Status'],
                 product?.['(09.) Series: Allen-Bradley Only'],
@@ -87,6 +90,8 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate){
                 product?.['(11.) Final Approval By'],
                 product?.['(22.) Image Updated By'],
             ];
+
+            log(JSON.stringify(productValues,null,2))
 
             if(!dbComponent.length){
 
@@ -100,7 +105,7 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate){
 
         } catch (error) {
 
-            console.log(error)
+            log(error)
 
         }
 

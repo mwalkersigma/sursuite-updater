@@ -21,11 +21,13 @@ const {getLastUpdatedTime, updateLastUpdatedTime} = require("./modules/utils/upd
 
 
 (async () => {
+    const {default:Logger} = await import("sigma-logger")
+    const log = (msg)=> Logger.log(msg)
     let lastUpdateDate = await getLastUpdatedTime("channelAdvisor");
-    console.log(lastUpdateDate);
-    await channelAdvisor(lastUpdateDate);
+    log(lastUpdateDate);
+    await channelAdvisor(lastUpdateDate,log);
     await updateLastUpdatedTime("channelAdvisor");
     lastUpdateDate = await getLastUpdatedTime("shipstation");
-    await shipstation(lastUpdateDate);
+    await shipstation(lastUpdateDate,log);
     await updateLastUpdatedTime("shipstation");
 })()
