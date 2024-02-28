@@ -90,13 +90,17 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate,log){
                 product?.['(22.) Image Updated By'],
             ];
 
-            log(JSON.stringify(productValues,null,2))
+            log(`Sku: ${product?.['Sku']} - ${dbComponent.length ? 'Updating' : 'Inserting'} into DB...`)
+            log(`Date Priced: `, product?.['(13.) Date Priced'])
+            log(`Image last updated: `, product?.['(21.) Image Last Updated Date'])
+            log(`Image Updated By: `, product?.['(22.) Image Updated By'])
+            log(`Template Approval Status: `, product?.['(06.) Template Approval Status'])
+            log(`Create Date: `, product?.['CreateDateUtc'])
+            log(`Update Date: `, product?.['UpdateDateUtc'])
 
             if(!dbComponent.length){
-                log('Inserting new product into DB');
                 await insertDB(productValues);
             }else{
-                log('Updating existing product in DB');
                 await updateDB(productValues);
             }
 
