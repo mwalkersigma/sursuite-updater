@@ -14,7 +14,7 @@ require('dotenv').config();
 
 
 const channelAdvisor = require('./modules/channelAdvisor/update.ca');
-const shipstation = require('./modules/shipstation/update.ss');
+const shipStation = require('./modules/shipstation/update.ss');
 
 const { getLastUpdatedTime, updateLastUpdatedTime } = require("./modules/utils/updateTime");
 
@@ -22,12 +22,14 @@ const { getLastUpdatedTime, updateLastUpdatedTime } = require("./modules/utils/u
 
 (async () => {
     const {default:Logger} = await import("sigma-logger")
-    const log = (msg)=> Logger.log(msg)
+    const log = (msg) => Logger.log(msg);
+
     let lastUpdateDate = await getLastUpdatedTime("channelAdvisor");
     log(lastUpdateDate);
     await channelAdvisor(lastUpdateDate,log);
     await updateLastUpdatedTime("channelAdvisor");
     lastUpdateDate = await getLastUpdatedTime("shipstation");
-    await shipstation(lastUpdateDate,log);
+    await shipStation(lastUpdateDate,log);
     await updateLastUpdatedTime("shipstation");
+
 })()

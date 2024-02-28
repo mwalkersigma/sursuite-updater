@@ -6,9 +6,7 @@ const componentDB = require('../Postgres/js/index.js');
 
 module.exports = async function updateFromChannelAdvisor(lastUpdateDate,log){
 
-
     const { APPLICATION_ID, SHARED_SECRET, REFRESH_TOKEN } = process.env;
-    
 
     log('Authorizing Channel Advisor...');
     const access_token = await authorizeChannelAdvisor(APPLICATION_ID, SHARED_SECRET, REFRESH_TOKEN);
@@ -27,6 +25,7 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate,log){
         
         newlyCreatedProductsResponse = await fetchWithBearerToken(newlyCreatedProducts['@odata.nextLink'], access_token);
         newlyCreatedProducts = await newlyCreatedProductsResponse.json();
+
     }
     log("finished getting newly created products");
     let newlyUpdatedProductsResponse = await fetchWithBearerToken(`https://api.channeladvisor.com/v1/Products?$filter=UpdateDateUtc ge ${lastUpdateDate}`, access_token);
@@ -55,7 +54,7 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate,log){
 
     for (let product of Products) {
         try {
-            let productID = product?.ID;
+            let productID = product?.['ID'];
 
             let attributesResponse = await fetchWithBearerToken(`https://api.channeladvisor.com/v1/Products(${productID})/Attributes`, access_token);
             let attributes = await attributesResponse.json();
@@ -94,13 +93,11 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate,log){
             log(JSON.stringify(productValues,null,2))
 
             if(!dbComponent.length){
-
+                log('Inserting new product into DB');
                 await insertDB(productValues);
-
             }else{
-
+                log('Updating existing product in DB');
                 await updateDB(productValues);
-
             }
 
         } catch (error) {
