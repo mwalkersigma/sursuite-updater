@@ -18,16 +18,16 @@ const shipStation = require('./modules/shipstation/update.ss');
 
 const { getLastUpdatedTime, updateLastUpdatedTime } = require("./modules/utils/updateTime");
 
-
-
 (async () => {
     const {default:Logger} = await import("sigma-logger")
     const log = (msg) => Logger.log(msg);
 
     let lastUpdateDate = await getLastUpdatedTime("channelAdvisor");
-    log(lastUpdateDate);
     await channelAdvisor(lastUpdateDate,log);
     await updateLastUpdatedTime("channelAdvisor");
+
+    log(lastUpdateDate);
+
     lastUpdateDate = await getLastUpdatedTime("shipstation");
     await shipStation(lastUpdateDate,log);
     await updateLastUpdatedTime("shipstation");

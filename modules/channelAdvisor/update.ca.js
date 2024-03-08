@@ -3,13 +3,44 @@ const authorizeChannelAdvisor = require('./authorizeChannelAdvisor.js');
 const {updateDB,insertDB} = require('./db.ca.js');
 const componentDB = require('../Postgres/js/index.js');
 
+const BASE_URL = "http://10.100.100.42:3005/"
 
-module.exports = async function updateFromChannelAdvisor(lastUpdateDate,log){
+function memoizedCall(){
+    let cache = {};
+    return async function(route){
+        if(cache[route]){
+            console.log("cache hit");
+            return cache[route];
+        }else{
+            console.log("cache miss");
+            cache[route] = await fetch(route).then((res) => res.json());
+            return cache[route];
+        }
+    }
+}
+
+const generateDescription = (desc,attributes) => {
+    attributes.customTest = ""
+    attributes.test = null
+    attributes.test2 = undefined
+    return Object.keys(attributes).reduce((acc,curr)=>{
+        if(!attributes[curr]) return acc;
+        acc += `||${curr}: ${attributes[curr]}`
+        return acc;
+    },desc.split("||")[0])
+}
+
+
+async function updateFromChannelAdvisor(lastUpdateDate,log){
 
     const { APPLICATION_ID, SHARED_SECRET, REFRESH_TOKEN } = process.env;
 
+    let categoriesCache = memoizedCall();
+    const categories = await fetch(BASE_URL).then((res) => res.json());
+
     log('Authorizing Channel Advisor...');
     const access_token = await authorizeChannelAdvisor(APPLICATION_ID, SHARED_SECRET, REFRESH_TOKEN);
+
     log('Channel Advisor Authorized!');
 
     let Products = new Set();
@@ -18,7 +49,7 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate,log){
     let newlyCreatedProducts = await newlyCreatedProductsResponse.json();
 
     while (newlyCreatedProducts['@odata.nextLink']) {
-
+        console.log(newlyCreatedProducts['@odata.nextLink']);
         newlyCreatedProducts.value.forEach((product) => {
             Products.add(JSON.stringify(product))
         })
@@ -28,6 +59,7 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate,log){
 
     }
     log("finished getting newly created products");
+
     let newlyUpdatedProductsResponse = await fetchWithBearerToken(`https://api.channeladvisor.com/v1/Products?$filter=UpdateDateUtc ge ${lastUpdateDate}`, access_token);
     let newlyUpdatedProducts = await newlyUpdatedProductsResponse.json();
 
@@ -67,6 +99,39 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate,log){
                 SELECT * FROM sursuite.components WHERE sku = $1
             `, [product?.['Sku']]).then((res) => res.rows);
 
+
+            const category = product?.['Classification']
+
+            if (categories.includes(category)) {
+                let attributesForDescription = await categoriesCache(BASE_URL + category);
+
+                const generatedDesc = generateDescription(
+                    product?.['Description'].split("||")[0],
+                    attributesForDescription
+                )
+
+                if (generatedDesc !== product?.['Description']) {
+                    log("Description does not match, updating...")
+                    log(generatedDesc)
+                    product['Description'] = generatedDesc;
+
+                    await fetchWithBearerToken(
+                        `https://api.channeladvisor.com/v1/Products(${productID})`,
+                        access_token,
+                        {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            Description: generatedDesc
+                        })
+                    })
+                }
+
+
+            }
+
             const productValues = [
                 product?.['Sku'],
                 product?.['Title'],
@@ -98,6 +163,7 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate,log){
             log(`Create Date: `, product?.['CreateDateUtc'])
             log(`Update Date: `, product?.['UpdateDateUtc'])
 
+
             if(!dbComponent.length){
                 await insertDB(productValues);
             }else{
@@ -113,3 +179,5 @@ module.exports = async function updateFromChannelAdvisor(lastUpdateDate,log){
     }
 
 }
+
+module.exports = updateFromChannelAdvisor
