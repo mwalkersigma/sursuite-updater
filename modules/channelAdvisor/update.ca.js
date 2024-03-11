@@ -20,11 +20,9 @@ function memoizedCall(){
 }
 
 const generateDescription = (desc,attributes) => {
-    attributes.customTest = ""
-    attributes.test = null
-    attributes.test2 = undefined
     return Object.keys(attributes).reduce((acc,curr)=>{
         if(!attributes[curr]) return acc;
+        if(attributes[curr] === "" || attributes[curr] === null || attributes[curr] === undefined) return acc;
         acc += `||${curr}: ${attributes[curr]}`
         return acc;
     },desc.split("||")[0])
