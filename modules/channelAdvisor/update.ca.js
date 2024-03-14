@@ -152,14 +152,29 @@ async function updateFromChannelAdvisor(lastUpdateDate,log){
                 product?.['(11.) Final Approval By'],
                 product?.['(22.) Image Updated By'],
             ];
+            log("---------------------------------------------------")
+            log(`Sku: ${productValues[0]} - ${dbComponent.length ? 'Updating' : 'Inserting'} into DB...`)
+            log(`Title : ${productValues[1]}`)
+            log(`Brand : ${productValues[2]}`)
+            log(`Description : ${productValues[3]}`)
+            log(`BuyItNowPrice : ${productValues[4]}`)
+            log(`RetailPrice : ${productValues[5]}`)
+            log(`Condition : ${productValues[6]}`)
+            log(`Classification : ${productValues[7]}`)
+            log(`Weight : ${productValues[8]}`)
+            log(`MPN : ${productValues[9]}`)
+            log(`CreateDateUtc : ${productValues[10]}`)
+            log(`UpdateDateUtc : ${productValues[11]}`)
+            log(`Date Priced : ${productValues[12]}`)
+            log(`Image Last Updated Date : ${productValues[13]}`)
+            log(`Date of Final Approval : ${productValues[14]}`)
+            log(`Template Approval Status : ${productValues[15]}`)
+            log(`Series: Allen-Bradley Only : ${productValues[16]}`)
+            log(`Priced By : ${productValues[17]}`)
+            log(`Final Approval By : ${productValues[18]}`)
+            log(`Image Updated By : ${productValues[19]}`)
+            log("---------------------------------------------------")
 
-            log(`Sku: ${product?.['Sku']} - ${dbComponent.length ? 'Updating' : 'Inserting'} into DB...`)
-            log(`Date Priced: `, product?.['(13.) Date Priced'])
-            log(`Image last updated: `, product?.['(21.) Image Last Updated Date'])
-            log(`Image Updated By: `, product?.['(22.) Image Updated By'])
-            log(`Template Approval Status: `, product?.['(06.) Template Approval Status'])
-            log(`Create Date: `, product?.['CreateDateUtc'])
-            log(`Update Date: `, product?.['UpdateDateUtc'])
 
 
             if(!dbComponent.length){
