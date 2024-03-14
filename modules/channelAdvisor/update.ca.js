@@ -51,12 +51,12 @@ async function updateFromChannelAdvisor(lastUpdateDate,log){
         newlyCreatedProducts.value.forEach((product) => {
             Products.add(JSON.stringify(product))
         })
-        
         newlyCreatedProductsResponse = await fetchWithBearerToken(newlyCreatedProducts['@odata.nextLink'], access_token);
         newlyCreatedProducts = await newlyCreatedProductsResponse.json();
-
     }
+    let productCount = Products.size;
     log("finished getting newly created products");
+    log(`finished parsing ${productCount} products`)
 
     let newlyUpdatedProductsResponse = await fetchWithBearerToken(`https://api.channeladvisor.com/v1/Products?$filter=UpdateDateUtc ge ${lastUpdateDate}`, access_token);
     let newlyUpdatedProducts = await newlyUpdatedProductsResponse.json();
@@ -70,6 +70,7 @@ async function updateFromChannelAdvisor(lastUpdateDate,log){
         newlyUpdatedProducts = await newlyUpdatedProductsResponse.json()
     }
     log("finished getting newly updated products");
+    log(`finished parsing ${Products.size - productCount} products`)
 
     Products = [...Products].map((product) => {
         try {
@@ -92,7 +93,6 @@ async function updateFromChannelAdvisor(lastUpdateDate,log){
             attributes = attributes.value.map((attribute) => ({ [attribute.Name]: attribute.Value })).reduce((acc, attribute) => ({ ...acc, ...attribute }), {});
 
             product = { ...product, ...attributes };
-            
             let dbComponent = await componentDB.query(`
                 SELECT * FROM sursuite.components WHERE sku = $1
             `, [product?.['Sku']]).then((res) => res.rows);
@@ -152,6 +152,7 @@ async function updateFromChannelAdvisor(lastUpdateDate,log){
                 product?.['(11.) Final Approval By'],
                 product?.['(22.) Image Updated By'],
             ];
+
             log("---------------------------------------------------")
             log(`Sku: ${productValues[0]} - ${dbComponent.length ? 'Updating' : 'Inserting'} into DB...`)
             log(`Title : ${productValues[1]}`)
