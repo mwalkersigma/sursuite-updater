@@ -80,7 +80,7 @@ async function updateFromChannelAdvisor(lastUpdateDate,log){
         }
     });
 
-    log("finished parsing products")
+    log(`finished parsing ${Products.size} products`)
 
     for (let product of Products) {
         try {
