@@ -188,6 +188,32 @@ module.exports = async function main (startDate,log) {
     }
 
     log("Done updating the database with new orders from ShipStation");
+    log("Calculating the total sales for each component and updating the calculated_sales table");
+
+    await db.query(`
+        UPDATE sursuite.component_sales
+        SET quantity_sold   = subquery.quantity_sold,
+            revenue         = subquery.revenue,
+            quantities_sold = subquery.quantities_sold,
+            dates_sold      = subquery.dates_sold,
+            sold_prices     = subquery.sold_prices,
+            store_ids       = subquery.store_ids
+        FROM (
+            SELECT 
+                components.sku,
+                COALESCE(SUM(s.quantity_sold), 0)                AS quantity_sold,
+                COALESCE(SUM(s.quantity_sold * s.sold_price), 0) AS revenue,
+                ARRAY_AGG(s.quantity_sold)                       AS quantities_sold,
+                ARRAY_AGG(payment_date_utc)                      AS dates_sold,
+                ARRAY_AGG(s.sold_price)                          AS sold_prices,
+                ARRAY_AGG(o.store_id)                            AS store_ids
+            FROM sursuite.components
+            LEFT JOIN sursuite.sales s ON s.sku = components.sku
+            LEFT JOIN sursuite.orders o ON s.order_id = o.order_id
+            GROUP BY components.sku
+            ) AS subquery
+        WHERE sursuite.component_sales.sku = subquery.sku;
+    `)
 
 }
 

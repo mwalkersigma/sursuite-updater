@@ -1,0 +1,84 @@
+-- CREATE A NEW TABLE FOR CALCULATED FIELDS
+DROP TABLE IF EXISTS sursuite.component_sales;
+CREATE TABLE IF NOT EXISTS sursuite.component_sales
+(
+    sku varchar(50) primary key NOT NULL,
+    quantity_sold int NOT NULL DEFAULT 0,
+    quantities_sold int[],
+    dates_sold date[],
+    sold_prices DECIMAL[],
+    store_ids text[],
+    revenue DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    FOREIGN KEY (sku) REFERENCES sursuite.components(sku)
+);
+INSERT INTO sursuite.component_sales (sku, quantity_sold, revenue, quantities_sold, dates_sold, sold_prices, store_ids)
+SELECT
+    components.sku,
+    COALESCE(SUM(s.quantity_sold), 0) AS quantity_sold,
+    COALESCE(SUM(s.quantity_sold * s.sold_price), 0) AS revenue,
+    ARRAY_AGG(s.quantity_sold) AS quantities_sold,
+    ARRAY_AGG(payment_date_utc) AS dates_sold,
+    ARRAY_AGG(s.sold_price) AS sold_prices,
+    ARRAY_AGG(o.store_id) AS store_ids
+
+FROM
+    sursuite.components
+        LEFT JOIN sursuite.sales s ON s.sku = components.sku
+        LEFT JOIN sursuite.orders o ON s.order_id = o.order_id
+GROUP BY
+    components.sku;
+-- SELECT
+--             COUNT(*) OVER() as total,
+--             components.sku,
+--             manufacturer,
+--             model,
+--             category,
+--             condition,
+--             retail_price as listing_price,
+--             radwell_price,
+--             quantity,
+--             cs.quantities_sold,
+--             cs.dates_sold,
+--             cs.sold_prices,
+--             cs.store_ids,
+--             cs.quantity_sold,
+--             cs.revenue
+-- FROM
+--     sursuite.components
+--         LEFT JOIN
+--     sursuite.sales s ON s.sku = components.sku
+--         LEFT JOIN
+--     sursuite.orders o ON s.order_id = o.order_id
+--         LEFT JOIN
+--     sursuite.component_sales cs ON cs.sku = components.sku
+-- WHERE
+--     (cs.quantity_sold < 1)
+-- ORDER BY
+--     quantity_sold DESC
+-- LIMIT
+--     250;
+-- UPDATE sursuite.component_sales
+-- SET
+--     quantity_sold = subquery.quantity_sold,
+--     revenue = subquery.revenue,
+--     quantities_sold = subquery.quantities_sold,
+--     dates_sold = subquery.dates_sold,
+--     sold_prices = subquery.sold_prices,
+--     store_ids = subquery.store_ids
+-- FROM (
+--          SELECT
+--              components.sku,
+--              COALESCE(SUM(s.quantity_sold), 0) AS quantity_sold,
+--              COALESCE(SUM(s.quantity_sold * s.sold_price), 0) AS revenue,
+--              ARRAY_AGG(s.quantity_sold) AS quantities_sold,
+--              ARRAY_AGG(payment_date_utc) AS dates_sold,
+--              ARRAY_AGG(s.sold_price) AS sold_prices,
+--              ARRAY_AGG(o.store_id) AS store_ids
+--          FROM
+--              sursuite.components
+--                  LEFT JOIN sursuite.sales s ON s.sku = components.sku
+--                  LEFT JOIN sursuite.orders o ON s.order_id = o.order_id
+--          GROUP BY
+--              components.sku
+--      ) AS subquery
+-- WHERE sursuite.component_sales.sku = subquery.sku;
