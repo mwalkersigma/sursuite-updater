@@ -26,10 +26,10 @@ const { getLastUpdatedTime, updateLastUpdatedTime } = require("./modules/utils/u
     await channelAdvisor(lastUpdateDate,log);
     await updateLastUpdatedTime("channelAdvisor");
 
-    log(lastUpdateDate);
-
-    lastUpdateDate = await getLastUpdatedTime("shipstation");
-    await shipStation(lastUpdateDate,log);
-    await updateLastUpdatedTime("shipstation");
+    // log(lastUpdateDate);
+    //
+    // lastUpdateDate = await getLastUpdatedTime("shipstation");
+    // await shipStation(lastUpdateDate,log);
+    // await updateLastUpdatedTime("shipstation");
 
 })()

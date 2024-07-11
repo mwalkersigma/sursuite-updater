@@ -90,7 +90,10 @@ async function updateFromChannelAdvisor(lastUpdateDate,log){
             let attributesResponse = await fetchWithBearerToken(`https://api.channeladvisor.com/v1/Products(${productID})/Attributes`, access_token);
             let attributes = await attributesResponse.json();
 
-            attributes = attributes.value.map((attribute) => ({ [attribute.Name]: attribute.Value })).reduce((acc, attribute) => ({ ...acc, ...attribute }), {});
+            attributes = attributes.value.map((attribute) => ({ [attribute.Name]: attribute.Value }))
+                .reduce((acc, attribute) => ({ ...acc, ...attribute }), {});
+
+
 
             product = { ...product, ...attributes };
             let dbComponent = await componentDB.query(`
@@ -102,6 +105,13 @@ async function updateFromChannelAdvisor(lastUpdateDate,log){
 
             if (categories.includes(category)) {
                 let attributesForDescription = await categoriesCache(BASE_URL + category);
+                attributesForDescription = attributesForDescription
+                    .reduce((acc,cur)=>{
+                        if(attributes[cur]){
+                            acc[cur] = attributes[cur];
+                        }
+                        return acc;
+                    },{})
 
                 const generatedDesc = generateDescription(
                     product?.['Description'].split("||")[0],
